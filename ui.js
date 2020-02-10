@@ -12,6 +12,8 @@ $(async function() {
   const $navCreate = $('#create-new-story')
   const $navFavorites = $('#favorite-stories')
   const $navMyStories = $('#created-stories')
+  const $navProfile = $('#nav-user-profile')
+  const $navWelcome = $('#nav-welcome')
 
   // global storyList variable
   let storyList = null;
@@ -39,6 +41,7 @@ $(async function() {
     currentUser = userInstance;
     syncCurrentUserToLocalStorage();
     loginAndSubmitForm();
+
   });
 
   /**
@@ -249,7 +252,10 @@ $(async function() {
     // reset those forms
     $loginForm.trigger("reset");
     $createAccountForm.trigger("reset");
+    $navProfile.text(currentUser.name)
+    $navWelcome.show()
 
+    
     generateStories();
 
     // show the stories
@@ -348,6 +354,8 @@ $(async function() {
     $navCreate.show();
     $navFavorites.show();
     $navMyStories.show();
+    $navProfile.text(currentUser.name)
+    $navWelcome.show()
   }
 
   /* simple function to pull the hostname from a URL */
