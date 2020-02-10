@@ -71,12 +71,14 @@ $(async function() {
     let author = $('#author').val();
     let title = $('#title').val();
     let url = $('#url').val();
+
     // create object for addStory function
     let storyObj = {
       author, 
       title,
       url
     }
+
     // call the add method, which sends story data to the API and 
     //then builds a new story instance from the response
     let newStory = await StoryList.addStory(currentUser, storyObj)
@@ -85,11 +87,9 @@ $(async function() {
     $allStoriesList.prepend(result);
     //update global storyList variable
     storyList.stories.push(newStory)
-    //reset form
-    author = ""
-    title = ""
-    url = ""
-
+  
+    //update currentUser 
+    currentUser.ownStories.push(newStory)
     $submitForm.slideToggle();
   })
 
@@ -117,6 +117,7 @@ $(async function() {
     $allStoriesList.toggle();
   });
 
+
   /**
    * Event handler for Navigation to Homepage
    */
@@ -125,6 +126,7 @@ $(async function() {
     hideElements();
     await generateStories();
     $allStoriesList.show();
+    $favoritedArticles.hide()
   });
   /**
    * Event handler for displaying add story form
@@ -133,11 +135,62 @@ $(async function() {
     $submitForm.slideToggle();
   })
 
-  $navFavorites.on('click', function(){
-    $allStoriesList.hide()
-    $favoritedArticles.show()
-    console.log(currentUser)
+  /**
+   * Event handler for Favorites page
+   */
+  $navFavorites.on('click', async function(){
+    $allStoriesList.hide();
+    $favoritedArticles.show();
+    $ownStories.hide();
+
+   if (currentUser){
+    $favoritedArticles.empty();
+    addToPage(currentUser.favorites, $favoritedArticles)
+   }
   })
+/**
+   * Event handler for My Stories page
+   */
+  $navMyStories.on('click', async function(){
+    $allStoriesList.hide();
+    $ownStories.show();
+    $favoritedArticles.hide();
+
+    //add stories to the page
+    if (currentUser){
+      $ownStories.empty();
+      addToPage(currentUser.ownStories, $ownStories)
+    
+    // add trash icon
+      for (li of $ownStories.children()){
+        const $trash = $(`<i class="far fa-trash-alt"></i>`)
+        $trash.prependTo(li)
+      }
+    }
+  })
+/**
+   * Event handler for trash icon 
+   */
+
+  $ownStories.on('click', 'i', async function(evt){
+    if ($(evt.target).hasClass('far fa-trash-alt')){
+
+      //get storyId
+      const storyId = $(evt.target).parent().attr('id');
+
+      //remove story from API
+      await StoryList.deleteStory(currentUser, storyId)
+
+      //update currentUser
+      const index = currentUser.ownStories.findIndex(id => storyId === id)
+      currentUser.ownStories.splice(index, 1)
+   
+      //remove from DOM
+      $(evt.target).parent().remove()
+  
+   }
+  })
+
 
   
   $allStoriesList.on('click', 'i', async function(evt){
@@ -146,33 +199,22 @@ $(async function() {
 
     // select story ID
     const favId = $(evt.target).parent().attr('id');
-    //const favStory = storyList.stories.find(val => val.storyId === favId);
-    
+    //check if the story is a favorite already
     const check = currentUser.favorites.some(userStory => 
       favId === userStory.storyId)
 
+      // update the user API and currentUser with new favorites
     if (check){
-     const response = await User.removeFavorite(currentUser, favId)
-     console.log(response)
-     console.log($(`#${favId}`))
-     console.log(currentUser)
+     const userFavoritesMinus1 = await User.removeFavorite(currentUser, favId)
+     currentUser.favorites = userFavoritesMinus1
     }
 
-    // update the user API with new favorite
+    // update the user API and currentUser with new favorites
     else {
-
-    const userFavorites = await User.addFavorite(currentUser, favId)
+      const userFavoritesPlus1 = await User.addFavorite(currentUser, favId)
+      currentUser.favorites = userFavoritesPlus1
     }
-    //TODO update current user and add/remove stoires to current favorite page
-    //add to favorites page
     
-   //const result = generateStoryHTML(userFavorites[userFavorites.length-1])
-   //favoritedArticles.append(result)
-
-    ////add to current user
-    //currentUser.favorites.push(favStory)
-    //syncCurrentUserToLocalStorage();
-    //console.log(currentUser)
   })
 
   /**
@@ -183,7 +225,6 @@ $(async function() {
     // let's see if we're logged in
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
-    const favorites = JSON.parse(localStorage.getItem("favorites"))
 
     // if there is a token in localStorage, call User.getLoggedInUser
     //  to get an instance of User with the right details
@@ -209,6 +250,8 @@ $(async function() {
     $loginForm.trigger("reset");
     $createAccountForm.trigger("reset");
 
+    generateStories();
+
     // show the stories
     $allStoriesList.show();
 
@@ -228,26 +271,25 @@ $(async function() {
     storyList = storyListInstance;
     // empty out that part of the page
     $allStoriesList.empty();
-    $favoritedArticles.empty();
-
-
-    //
-   if (currentUser.favorites){
-      for (let story of currentUser.favorites){
-        const storyLi = generateStoryHTML(story)
-        updateStars(storyLi)
-        $favoritedArticles.append(storyLi)
-    }
-   }
+    console.log(currentUser)
 
     // loop through all of our stories and generate HTML for them
     for (let story of storyList.stories) {
       const storyLi = generateStoryHTML(story);
       
-      if (currentUser.favorites){
+      if (currentUser){
         updateStars(storyLi)
       }
       $allStoriesList.append(storyLi);
+    }
+  }
+
+  // add stories to a new page
+  function addToPage(userArray, newPage){
+    for (let story of userArray){
+      const storyLi = generateStoryHTML(story)
+      updateStars(storyLi)
+      newPage.append(storyLi)
     }
   }
 
@@ -258,7 +300,7 @@ $(async function() {
        storyLi.children(":first").addClass('fas').removeClass('far')
      }
   }
-
+  // check if story ID matches user ID
   function checkUserId(storyLi){
     return currentUser.favorites.some(userStory => 
       storyLi.attr('id') === userStory.storyId)
@@ -329,7 +371,6 @@ $(async function() {
     if (currentUser) {
       localStorage.setItem("token", currentUser.loginToken);
       localStorage.setItem("username", currentUser.username);
-      localStorage.setItem("favorites", JSON.stringify(currentUser.favorites));
     }
   }
 });

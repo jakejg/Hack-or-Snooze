@@ -55,8 +55,16 @@ class StoryList {
       }  
     })
     const newStoryInstance = new Story(response.data.story)
-    console.log(newStoryInstance)
   return newStoryInstance;
+  }
+
+  static async deleteStory(user, storyId){
+    const response = await axios.delete(`${BASE_URL}/stories/${storyId}`,{
+      data:{
+      "token": user.loginToken
+    }})
+    return new Story(response.data.story)
+
   }
 }
 
@@ -176,6 +184,7 @@ class User {
     }})
     return response.data.user.favorites.map(s => new Story(s));
   }
+
 }
 
 /**
