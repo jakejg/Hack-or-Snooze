@@ -14,6 +14,7 @@ $(async function() {
   const $navMyStories = $('#created-stories')
   const $navProfile = $('#nav-user-profile')
   const $navWelcome = $('#nav-welcome')
+  const $userProfile = $('#user-profile')
 
   // global storyList variable
   let storyList = null;
@@ -120,6 +121,12 @@ $(async function() {
     $allStoriesList.toggle();
   });
 
+  $navProfile.on("click", function(){
+    $userProfile.show();
+    $allStoriesList.hide();
+    $favoritedArticles.show();
+    $ownStories.hide();
+  })
 
   /**
    * Event handler for Navigation to Homepage
@@ -130,6 +137,7 @@ $(async function() {
     await generateStories();
     $allStoriesList.show();
     $favoritedArticles.hide()
+    $userProfile.hide();
   });
   /**
    * Event handler for displaying add story form
@@ -145,6 +153,7 @@ $(async function() {
     $allStoriesList.hide();
     $favoritedArticles.show();
     $ownStories.hide();
+    $userProfile.hide();
 
    if (currentUser){
     $favoritedArticles.empty();
@@ -158,6 +167,7 @@ $(async function() {
     $allStoriesList.hide();
     $ownStories.show();
     $favoritedArticles.hide();
+    $userProfile.hide();
 
     //add stories to the page
     if (currentUser){
@@ -185,12 +195,14 @@ $(async function() {
       await StoryList.deleteStory(currentUser, storyId)
 
       //update currentUser
-      const index = currentUser.ownStories.findIndex(id => storyId === id)
-      currentUser.ownStories.splice(index, 1)
+      const ownIndex = currentUser.ownStories.findIndex(id => storyId === id)
+      const favIndex = currentUser.favorites.findIndex(id => storyId === id)
+      currentUser.ownStories.splice(ownIndex, 1)
+      currentUser.favorites.splice(favIndex, 1)
+
    
       //remove from DOM
       $(evt.target).parent().remove()
-  
    }
   })
 
@@ -237,6 +249,7 @@ $(async function() {
 
     if (currentUser) {
       showNavForLoggedInUser();
+      generateProfile();
     }
   }
 
@@ -263,6 +276,7 @@ $(async function() {
 
     // update the navigation bar
     showNavForLoggedInUser();
+    generateProfile()
   }
 
   /**
@@ -332,6 +346,13 @@ $(async function() {
     `);
 
     return storyMarkup;
+  }
+
+  function generateProfile(){
+    $('#profile-name').text(`Name: ${currentUser.name}`)
+    $('#profile-username').text(`Username: ${currentUser.username}`)
+    $('#profile-account-date').text(`Account Created: ${currentUser.createdAt}`)
+
   }
 
   /* hide all elements in elementsArr */

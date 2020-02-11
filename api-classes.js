@@ -97,13 +97,18 @@ class User {
    */
 
   static async create(username, password, name) {
-    const response = await axios.post(`${BASE_URL}/signup`, {
-      user: {
-        username,
-        password,
-        name
-      }
-    });
+    try{
+      const response = await axios.post(`${BASE_URL}/signup`, {
+       user: {
+         username,
+         password,
+         name
+        }
+      });
+    }
+    catch(e){
+      alert("Username taken")
+    }
 
     // build a new User instance from the API response
     const newUser = new User(response.data.user);
