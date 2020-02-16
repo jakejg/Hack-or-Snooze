@@ -105,18 +105,19 @@ class User {
          name
         }
       });
+
+      // build a new User instance from the API response
+      const newUser = new User(response.data.user);
+
+      // attach the token to the newUser instance for convenience
+      newUser.loginToken = response.data.token;
+
+      return newUser;
     }
-    catch(e){
+    catch(err){
       alert("Username taken")
+      throw "Response not Valid"
     }
-
-    // build a new User instance from the API response
-    const newUser = new User(response.data.user);
-
-    // attach the token to the newUser instance for convenience
-    newUser.loginToken = response.data.token;
-
-    return newUser;
   }
 
   /* Login in user and return user instance.
@@ -126,24 +127,30 @@ class User {
    */
 
   static async login(username, password) {
-    const response = await axios.post(`${BASE_URL}/login`, {
-      user: {
-        username,
-        password
-      }
-    });
+    try{
+      const response = await axios.post(`${BASE_URL}/login`, {
+        user: {
+          username,
+          password
+        }
+      });
+  
+      // build a new User instance from the API response
+        const existingUser = new User(response.data.user);
 
-    // build a new User instance from the API response
-    const existingUser = new User(response.data.user);
+        // instantiate Story instances for the user's favorites and ownStories
+        existingUser.favorites = response.data.user.favorites.map(s => new Story(s));
+        existingUser.ownStories = response.data.user.stories.map(s => new Story(s));
 
-    // instantiate Story instances for the user's favorites and ownStories
-    existingUser.favorites = response.data.user.favorites.map(s => new Story(s));
-    existingUser.ownStories = response.data.user.stories.map(s => new Story(s));
+        // attach the token to the newUser instance for convenience
+        existingUser.loginToken = response.data.token;
 
-    // attach the token to the newUser instance for convenience
-    existingUser.loginToken = response.data.token;
-
-    return existingUser;
+        return existingUser;
+    }
+    catch(err){
+      alert("Username/password not found")
+      throw "Response not valid";
+    }
   }
 
   /** Get user instance for the logged-in-user.
@@ -157,22 +164,27 @@ class User {
     if (!token || !username) return null;
 
     // call the API
-    const response = await axios.get(`${BASE_URL}/users/${username}`, {
-      params: {
-        token
-      }
-    });
-
-    // instantiate the user from the API information
-    const existingUser = new User(response.data.user);
-
-    // attach the token to the newUser instance for convenience
-    existingUser.loginToken = token;
-
-    // instantiate Story instances for the user's favorites and ownStories
-    existingUser.favorites = response.data.user.favorites.map(s => new Story(s));
-    existingUser.ownStories = response.data.user.stories.map(s => new Story(s));
-    return existingUser;
+    try{
+      const response = await axios.get(`${BASE_URL}/users/${username}`, {
+        params: {
+          token
+        }
+      });
+    
+      // instantiate the user from the API information
+      const existingUser = new User(response.data.user);
+    
+      // attach the token to the newUser instance for convenience
+      existingUser.loginToken = token;
+    
+      // instantiate Story instances for the user's favorites and ownStories
+      existingUser.favorites = response.data.user.favorites.map(s => new Story(s));
+      existingUser.ownStories = response.data.user.stories.map(s => new Story(s));
+      return existingUser;
+    }
+    catch(err){
+      throw "Response not valid"
+    }
   }
 
   static async addFavorite(user, storyId){
