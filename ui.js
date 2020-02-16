@@ -99,7 +99,7 @@ $(async function() {
       $submitForm.slideToggle();
   })
 
-
+//Event listener to handle all clicks on the Nav Bar
   $navBar.on('click', function(evt) {
       let $ID = $(evt.target).parent().attr('id')
       let $IDNoParent = $(evt.target).attr('id')
