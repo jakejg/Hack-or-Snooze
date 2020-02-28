@@ -31,7 +31,7 @@ $(async function() {
    *  If successfully we will setup the user instance
    */
 
-  $loginForm.on("submit", async function(evt) {
+  $loginForm.on("submit", async function login(evt) {
       evt.preventDefault(); // no page-refresh on submit
 
       // grab the username and password
@@ -39,12 +39,16 @@ $(async function() {
       const password = $("#login-password").val();
 
       // call the login static method to build a user instance
+    try{
       const userInstance = await User.login(username, password);
       // set the global user to the user instance
       currentUser = userInstance;
       syncCurrentUserToLocalStorage();
       loginAndSubmitForm();
-
+    }
+    catch{
+      alert("Username/password not found")
+    }
   });
 
   /**
@@ -52,7 +56,7 @@ $(async function() {
    *  If successfully we will setup a new user instance
    */
 
-  $createAccountForm.on("submit", async function(evt) {
+  $createAccountForm.on("submit", async function createAccount(evt) {
       evt.preventDefault(); // no page refresh
 
       // grab the required fields
@@ -61,16 +65,21 @@ $(async function() {
       let password = $("#create-account-password").val();
 
       // call the create method, which calls the API and then builds a new user instance
-      const newUser = await User.create(username, password, name);
-      currentUser = newUser;
-      syncCurrentUserToLocalStorage();
-      loginAndSubmitForm();
+      try{
+        const newUser = await User.create(username, password, name);
+        currentUser = newUser;
+        syncCurrentUserToLocalStorage();
+        loginAndSubmitForm();
+      }
+      catch{
+          alert("Username taken")
+      }
   });
 
   /**
    * Event listener for submitting a new story.
    */
-  $submitForm.on('submit', async function(evt) {
+  $submitForm.on('submit', async function submitStory(evt) {
       evt.preventDefault(); // no page refresh
 
       // grab the required fields
@@ -85,7 +94,7 @@ $(async function() {
           url
       }
 
-      // call the add method, which sends story data to the API and 
+      // call the addStroy method, which sends story data to the API and 
       //then builds a new story instance from the response
       let newStory = await StoryList.addStory(currentUser, storyObj)
       //add story to the DOM
@@ -100,7 +109,7 @@ $(async function() {
   })
 
 //Event listener to handle all clicks on the Nav Bar
-  $navBar.on('click', function(evt) {
+  $navBar.on('click', function handleNavBarClicks(evt) {
       let $ID = $(evt.target).parent().attr('id')
       let $IDNoParent = $(evt.target).attr('id')
 
@@ -218,16 +227,13 @@ $(async function() {
 
           //get storyId
           const storyId = $(evt.target).parent().attr('id');
-
+        
           //remove story from API
           await StoryList.deleteStory(currentUser, storyId)
 
           //update currentUser
-          const ownIndex = currentUser.ownStories.findIndex(id => storyId === id)
-          const favIndex = currentUser.favorites.findIndex(id => storyId === id)
-          currentUser.ownStories.splice(ownIndex, 1)
-          currentUser.favorites.splice(favIndex, 1)
-
+          updateUser(currentUser.ownStories, storyId)
+          updateUser(currentUser.favorites, storyId)
 
           //remove from DOM
           $(evt.target).parent().remove()
@@ -235,8 +241,8 @@ $(async function() {
   })
 
 
-
-  $allStoriesList.on('click', 'i', async function(evt) {
+  
+  $allStoriesList.on('click', 'i', async function handleNewFav(evt) {
       // change star color
       $(evt.target).toggleClass('far').toggleClass('fas');
 
@@ -248,13 +254,13 @@ $(async function() {
 
       // update the user API and currentUser with new favorites
       if (check) {
-          const userFavoritesMinus1 = await User.removeFavorite(currentUser, favId)
+          const userFavoritesMinus1 = await currentUser.removeFavorite(favId)
           currentUser.favorites = userFavoritesMinus1
       }
 
       // update the user API and currentUser with new favorites
       else {
-          const userFavoritesPlus1 = await User.addFavorite(currentUser, favId)
+          const userFavoritesPlus1 = await currentUser.addFavorite(favId)
           currentUser.favorites = userFavoritesPlus1
       }
 
@@ -332,8 +338,8 @@ $(async function() {
   }
 
   // add stories to a new page
-  function addToPage(userArray, newPage) {
-      for (let story of userArray) {
+  function addToPage(storyArray, newPage) {
+      for (let story of storyArray) {
           const storyLi = generateStoryHTML(story)
           updateStars(storyLi)
           newPage.append(storyLi)
@@ -352,6 +358,13 @@ $(async function() {
       return currentUser.favorites.some(userStory =>
           storyLi.attr('id') === userStory.storyId)
   }
+
+  function updateUser(array, storyId){
+    const index = array.findIndex(id => storyId === id)
+    array.splice(index, 1)
+  }
+
+  
   /**
    * A function to render HTML for an individual Story instance
    */

@@ -42,9 +42,7 @@ class StoryList {
    *
    * Returns the new story object
    */
-// TODO - Implement this functions!
-    // this function should return the newly created story so it can be used in
-    // the script.js file where it will be appended to the DOM
+
   static async addStory(user, newStory) {
     const response = await axios.post(`${BASE_URL}/stories`, {
       token: user.loginToken,
@@ -55,7 +53,7 @@ class StoryList {
       }  
     })
     const newStoryInstance = new Story(response.data.story)
-  return newStoryInstance;
+    return newStoryInstance;
   }
 
   static async deleteStory(user, storyId){
@@ -115,8 +113,9 @@ class User {
       return newUser;
     }
     catch(err){
-      alert("Username taken")
-      throw "Response not Valid"
+      if (err.message.includes("409")){
+        throw new error("Conflict")
+      }
     }
   }
 
@@ -148,8 +147,9 @@ class User {
         return existingUser;
     }
     catch(err){
-      alert("Username/password not found")
-      throw "Response not valid";
+      if (err.message.includes("404")){
+          throw new error("Not found")
+        }
     }
   }
 
@@ -187,17 +187,17 @@ class User {
     }
   }
 
-  static async addFavorite(user, storyId){
-    const response = await axios.post(`${BASE_URL}/users/${user.username}/favorites/${storyId}`,{
-        "token": user.loginToken
+  async addFavorite(storyId){
+    const response = await axios.post(`${BASE_URL}/users/${this.username}/favorites/${storyId}`,{
+        "token": this.loginToken
       })
       return response.data.user.favorites.map(s => new Story(s));
   }
 
-  static async removeFavorite(user, storyId){
-    const response = await axios.delete(`${BASE_URL}/users/${user.username}/favorites/${storyId}`,{
+  async removeFavorite(storyId){
+    const response = await axios.delete(`${BASE_URL}/users/${this.username}/favorites/${storyId}`,{
       data:{
-      "token": user.loginToken
+      "token": this.loginToken
     }})
     return response.data.user.favorites.map(s => new Story(s));
   }
@@ -224,4 +224,6 @@ class Story {
     this.createdAt = storyObj.createdAt;
     this.updatedAt = storyObj.updatedAt;
   }
+
+  
 }
