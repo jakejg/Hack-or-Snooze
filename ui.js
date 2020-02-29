@@ -102,6 +102,7 @@ $(async function() {
       $allStoriesList.prepend(result);
       //update global storyList variable
       storyList.stories.push(newStory)
+      console.log(storyList)
 
       //update currentUser 
       currentUser.ownStories.push(newStory)
@@ -278,13 +279,13 @@ $(async function() {
       // if there is a token in localStorage, call User.getLoggedInUser
       //  to get an instance of User with the right details
       //  this is designed to run once, on page load
-      currentUser = await User.getLoggedInUser(token, username);
-      await generateStories();
+    currentUser = await User.getLoggedInUser(token, username);
+    await generateStories();
+    if (currentUser) {
+        showNavForLoggedInUser();
+        generateProfile();
+    }
 
-      if (currentUser) {
-          showNavForLoggedInUser();
-          generateProfile();
-      }
   }
 
   /**
@@ -443,3 +444,4 @@ $(async function() {
       }
   }
 });
+
