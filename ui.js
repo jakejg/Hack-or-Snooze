@@ -230,7 +230,8 @@ $(async function() {
           const storyId = $(evt.target).parent().attr('id');
         
           //remove story from API
-          await StoryList.deleteStory(currentUser, storyId)
+          const response = await StoryList.deleteStory(currentUser, storyId)
+          if (response){
 
           //update currentUser
           updateUser(currentUser.ownStories, storyId)
@@ -238,6 +239,7 @@ $(async function() {
 
           //remove from DOM
           $(evt.target).parent().remove()
+        }
       }
   })
 
