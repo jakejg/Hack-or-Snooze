@@ -245,7 +245,9 @@ $(async function() {
   
   $allStoriesList.on('click', 'i', async function handleNewFav(evt) {
       // change star color
-      $(evt.target).toggleClass('far').toggleClass('fas');
+      if (currentUser) {
+        $(evt.target).toggleClass('far').toggleClass('fas');
+      }
 
       // select story ID
       const favId = $(evt.target).parent().attr('id');
@@ -326,7 +328,7 @@ $(async function() {
       storyList = storyListInstance;
       // empty out that part of the page
       $allStoriesList.empty();
-
+    
       // loop through all of our stories and generate HTML for them
       for (let story of storyList.stories) {
           const storyLi = generateStoryHTML(story);

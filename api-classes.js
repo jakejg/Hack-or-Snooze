@@ -1,4 +1,5 @@
 const BASE_URL = "https://hack-or-snooze-v3.herokuapp.com";
+const tokenKey = "token"
 
 /**
  * This class maintains the list of individual Story instances
@@ -19,9 +20,7 @@ class StoryList {
    *  - returns the StoryList instance.*
    */
 
-  // TODO: Note the presence of `static` keyword: this indicates that getStories
-  // is **not** an instance method. Rather, it is a method that is called on the
-  // class directly. Why doesn't it make sense for getStories to be an instance method?
+
 
   static async getStories() {
     // query the /stories endpoint (no auth required)
