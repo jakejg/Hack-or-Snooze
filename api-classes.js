@@ -5,6 +5,11 @@ const tokenKey = "token"
  * This class maintains the list of individual Story instances
  *  It also has some methods for fetching, adding, and removing stories
  */
+function showErrorMessage(error) {
+  const msg = error.response.data.error.message
+  alert(msg)
+}
+
 
 class StoryList {
   constructor(stories) {
@@ -94,29 +99,28 @@ class User {
    */
 
   static async create(username, password, name) {
-    try{
-      const response = await axios.post(`${BASE_URL}/signup`, {
+      let newUser;
+      await axios.post(`${BASE_URL}/signup`, {
        user: {
          username,
          password,
          name
         }
-      });
-
-      // build a new User instance from the API response
-      const newUser = new User(response.data.user);
+      })
+      .then((response) => {
+        // build a new User instance from the API response
+      newUser = new User(response.data.user);
 
       // attach the token to the newUser instance for convenience
       newUser.loginToken = response.data.token;
 
+      }, (error) => {
+        showErrorMessage(error)
+        newUser = null
+      })
       return newUser;
-    }
-    catch(err){
-      if (err.message.includes("409")){
-        throw new error("Conflict")
-      }
-    }
-  }
+      
+}
 
   /* Login in user and return user instance.
 
@@ -125,16 +129,16 @@ class User {
    */
 
   static async login(username, password) {
-    try{
-      const response = await axios.post(`${BASE_URL}/login`, {
+      let existingUser;
+      await axios.post(`${BASE_URL}/login`, {
         user: {
           username,
           password
         }
-      });
-  
-      // build a new User instance from the API response
-        const existingUser = new User(response.data.user);
+      })
+      .then((response) => {
+        // build a new User instance from the API response
+        existingUser = new User(response.data.user);
 
         // instantiate Story instances for the user's favorites and ownStories
         existingUser.favorites = response.data.user.favorites.map(s => new Story(s));
@@ -142,14 +146,15 @@ class User {
 
         // attach the token to the newUser instance for convenience
         existingUser.loginToken = response.data.token;
+       
+      }, (error) => {
+        
+        showErrorMessage(error)
+        existingUser = null
+      })
 
         return existingUser;
-    }
-    catch(err){
-      if (err.message.includes("404")){
-          throw new error("Not found")
-        }
-    }
+   
   }
 
   /** Get user instance for the logged-in-user.

@@ -39,16 +39,15 @@ $(async function() {
       const password = $("#login-password").val();
 
       // call the login static method to build a user instance
-    try{
       const userInstance = await User.login(username, password);
-      // set the global user to the user instance
-      currentUser = userInstance;
-      syncCurrentUserToLocalStorage();
-      loginAndSubmitForm();
-    }
-    catch{
-      alert("Username/password not found")
-    }
+
+      if (userInstance){
+        // set the global user to the user instance
+        currentUser = userInstance;
+        syncCurrentUserToLocalStorage();
+        loginAndSubmitForm();
+      }
+   
   });
 
   /**
@@ -65,14 +64,13 @@ $(async function() {
       let password = $("#create-account-password").val();
 
       // call the create method, which calls the API and then builds a new user instance
-      try{
-        const newUser = await User.create(username, password, name);
+      
+      const newUser = await User.create(username, password, name);
+  
+      if (newUser) {
         currentUser = newUser;
         syncCurrentUserToLocalStorage();
         loginAndSubmitForm();
-      }
-      catch{
-          alert("Username taken")
       }
   });
 
