@@ -63,7 +63,7 @@ class StoryList {
   static async deleteStory(user, storyId){
     const response = await axios.delete(`${BASE_URL}/stories/${storyId}`,{
       data:{
-      "token": user.loginToken
+      [tokenKey]: user.loginToken
     }})
     return new Story(response.data.story)
 
@@ -188,7 +188,7 @@ class User {
 
   async addFavorite(storyId){
     const response = await axios.post(`${BASE_URL}/users/${this.username}/favorites/${storyId}`,{
-        "token": this.loginToken
+        [tokenKey]: this.loginToken
       })
       return response.data.user.favorites.map(s => new Story(s));
   }
@@ -196,7 +196,7 @@ class User {
   async removeFavorite(storyId){
     const response = await axios.delete(`${BASE_URL}/users/${this.username}/favorites/${storyId}`,{
       data:{
-      "token": this.loginToken
+      [tokenKey]: this.loginToken
     }})
     return response.data.user.favorites.map(s => new Story(s));
   }
